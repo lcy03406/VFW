@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -75,12 +75,23 @@ namespace Vexe.Runtime.Helpers
             CachedGetRuntimeTypes = new Func<Type[]>(() =>
             {
                 Predicate<string> isIgnoredAssembly = name =>
-                    name.Contains("Dbg") || name.Contains("Editor") || IgnoredAssemblies.Contains(name);
+                    name.Contains("Dbg") 
+					//|| name.Contains("Editor")
+					|| IgnoredAssemblies.Contains(name)
+					|| name.StartsWith("Mono")
+					|| name.StartsWith("System")
+					|| name.StartsWith("I18N")
+					|| name.StartsWith("Boo")
+					|| name.StartsWith("Unity")
+					|| name.StartsWith("Newtonsoft")
+					;
 
-                return AppDomain.CurrentDomain.GetAssemblies()
-                                              .Where(x => !isIgnoredAssembly(x.GetName().Name))
-                                              .SelectMany(x => x.GetTypes())
-                                              .ToArray();
+				var ass = AppDomain.CurrentDomain.GetAssemblies();
+				var where = ass.Where(x => !isIgnoredAssembly(x.GetName().Name));
+				var see_where = where.ToArray();
+				var select = where.SelectMany(x => x.GetTypes());
+				var see_select = select.ToArray();
+				return select.ToArray();
             }).Memoize();
         }
 
@@ -150,7 +161,9 @@ namespace Vexe.Runtime.Helpers
         /// </summary>
         public static Type[] GetAllUserTypesOf(Type type)
         {
-            return CachedGetRuntimeTypes().Where(type.IsAssignableFrom).ToArray();
+			var all = CachedGetRuntimeTypes();
+			var ass = all.Where(type.IsAssignableFrom);
+			return ass.ToArray();
         }
 
         /// <summary>
